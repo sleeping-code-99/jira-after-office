@@ -1,69 +1,4 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login — ProjectFlow by AfterOffice Academy</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
-</head>
-<body style="min-height:100vh">
-
-<!-- AUTH -->
-<div id="auth-screen">
-  <div class="auth-wrap">
-    <div class="auth-brand">
-      <div class="auth-brand-name">Project<span>Flow</span><div style="font-size:11px;font-weight:400;color:var(--text-s);letter-spacing:0;margin-top:1px">by AfterOffice Academy</div></div>
-    </div>
-    <div class="auth-h">Masuk ke workspace</div>
-    <div class="auth-sub" id="auth-greeting"></div>
-    <div class="fl">
-      <div class="auth-err" id="auth-err"></div>
-      <div class="fg"><label>Email</label><input class="fi" type="email" id="li-email" placeholder="email@kamu.com"></div>
-      <div class="fg"><label>Password</label><input class="fi" type="password" id="li-pass" placeholder="••••••••"></div>
-      <button class="btn-prim" id="li-btn" onclick="doLogin()">Masuk</button>
-    </div>
-    
-  </div>
-</div>
-
-<script src="config.js"></script>
-<script>
-// Kalau sudah ada session, langsung redirect ke app
-(async function checkSession(){
-  if(SUPABASE_URL === 'YOUR_SUPABASE_URL') return;
-  try {
-    const { data: { session } } = await sb.auth.getSession();
-    if(session && session.user) {
-      window.location.replace('index.html');
-    }
-  } catch(e) { console.error('Session check error:', e); }
-})();
-
-async function doLogin(){
-  const email = document.getElementById('li-email').value.trim();
-  const pass = document.getElementById('li-pass').value;
-  const err = document.getElementById('auth-err');
-  const btn = document.getElementById('li-btn');
-  err.style.display = 'none';
-  if(!email){ err.textContent='Email tidak boleh kosong.'; err.style.display='block'; return; }
-  if(!pass){ err.textContent='Password tidak boleh kosong.'; err.style.display='block'; return; }
-
-  btn.disabled = true; btn.textContent = 'Masuk...';
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-  btn.disabled = false; btn.textContent = 'Masuk';
-
-  if(error){ err.textContent = error.message; err.style.display = 'block'; return; }
-  // Login berhasil → redirect ke app (fresh load)
-  window.location.href = 'index.html';
-}
-
-document.getElementById('li-pass').addEventListener('keydown', e => {
-  if(e.key === 'Enter') doLogin();
-});
-</script>
-<script>
+// greeting.js
 (function(){
   var h = new Date().getHours();
   var salam = h < 11 ? 'Selamat Pagi' : h < 15 ? 'Selamat Siang' : h < 18 ? 'Selamat Sore' : 'Selamat Malam';
@@ -197,6 +132,3 @@ async function deleteMember(id){
   showToast('Member dihapus.');
 }
 
-</script>
-</body>
-</html>
