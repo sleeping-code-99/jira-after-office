@@ -343,11 +343,12 @@
 <script>
 // Cek session saat halaman load
 window.addEventListener('DOMContentLoaded', async function(){
+  // Show loading indicator
+  document.body.style.opacity = '0';
   try {
     const { data: { session }, error } = await sb.auth.getSession();
-    if(!session){
-      // Tidak ada session → redirect ke login
-      window.location.href = 'login.html';
+    if(!session || !session.user){
+      window.location.replace('login.html');
       return;
     }
     currentUser = session.user;
@@ -363,13 +364,14 @@ window.addEventListener('DOMContentLoaded', async function(){
     await loadData();
     await syncMember(email);
     startRealtime();
-    // Background silent refresh every 15s as fallback
     setInterval(() => loadData(true), 15000);
     renderAll();
+    document.body.style.opacity = '1';
+    document.body.style.transition = 'opacity 0.2s ease';
     showPage('projects', document.getElementById('nav-projects'));
   } catch(e){
     console.error('App init error:', e);
-    window.location.href = 'login.html';
+    window.location.replace('login.html');
   }
 });
 
