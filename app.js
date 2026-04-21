@@ -1,7 +1,3 @@
-const SUPABASE_URL = 'https://mzxptzoapezfaaepkzul.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16eHB0em9hcGV6ZmFhZXBrenVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTQ4MzMsImV4cCI6MjA5MjI5MDgzM30.uMNzyKquhvY4GQqW-8pDHpNWOm5J8SFQntwFKLJlEhI';
-const PROJECT_COLORS = ['#0052CC','#36B37E','#FF5630','#FF991F','#6554C0','#00B8D9','#172B4D','#57D9A3'];
-const ADMIN_EMAIL = 'kornelius@afteroffice.com';
 let sb = null, currentUser = null, demoMode = false;
 let projects = [], issues = [], members = [], comments = {}, deliveryLinks = {};
 let currentProjectId = null, currentIssueId = null, prevPage = 'projects', selectedMemberColor = '#0052CC';
@@ -52,31 +48,9 @@ const DEMO_MEMBERS = [
   {id:'m5',name:'Dani Wijaya',email:'dani@afteroffice.com',role:'Marketing',color:'#FF991F'},
 ];
 
-// ── AUTH ──
-document.getElementById('li-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-  if(!pass){err.textContent='Password tidak boleh kosong.';err.style.display='block';return;}
-  if(SUPABASE_URL==='YOUR_SUPABASE_URL'){demoMode=true;currentUser={email,id:'demo'};enterApp(email);return;}
-  btn.disabled=true;btn.textContent='Masuk...';
-  const{data,error}=await sb.auth.signInWithPassword({email,password:pass});
-  btn.disabled=false;btn.textContent='Masuk';
-  if(error){err.textContent=error.message;err.style.display='block';return;}
-  currentUser=data.user;enterApp(email);
-}
-  await loadData();
-  await syncMember(email);
-  showPage('projects',document.getElementById('nav-projects'));
-}
-
 // ── DATA ──
-async function loadData(silent=false){
-  if(demoMode){
-    if(!silent){
-      projects=[...DEMO_PROJECTS];issues=[...DEMO_ISSUES_RAW];
-      deliveryLinks={...JSON.parse(JSON.stringify(DEMO_LINKS))};
-      members=[...DEMO_MEMBERS];issueCounter=11;
-    }
-    return;
-  }
+async function loadData(){
+  if(demoMode){projects=[...DEMO_PROJECTS];issues=[...DEMO_ISSUES_RAW];deliveryLinks={...JSON.parse(JSON.stringify(DEMO_LINKS))};members=[...DEMO_MEMBERS];issueCounter=11;renderAll();return;}
   try {
     const[r1,r2,r3]=await Promise.all([
       sb.from('projects').select('*').order('created_at'),
@@ -86,39 +60,19 @@ async function loadData(silent=false){
     if(r1.error) console.error('projects error:',r1.error);
     if(r2.error) console.error('issues error:',r2.error);
     if(r3.error) console.error('members error:',r3.error);
-
-    const newProjects = r1.data||[];
-    const newIssues   = r2.data||[];
-    const newMembers  = r3.data||[];
-
-    // Only update + re-render if data actually changed
-    const projectsChanged = JSON.stringify(newProjects) !== JSON.stringify(projects);
-    const issuesChanged   = JSON.stringify(newIssues)   !== JSON.stringify(issues);
-    const membersChanged  = JSON.stringify(newMembers)  !== JSON.stringify(members);
-
-    if(projectsChanged) projects = newProjects;
-    if(issuesChanged)   issues   = newIssues;
-    if(membersChanged)  members  = newMembers;
-
-    // Restore issue counter
+    projects=r1.data||[];
+    issues=r2.data||[];
+    members=r3.data||[];
+    // hitung issueCounter dari key yang ada
     const maxKey=issues.reduce((max,i)=>{
       const n=parseInt((i.key||'').split('-')[1]||0);
       return n>max?n:max;
     },0);
     issueCounter=maxKey+1;
-
-    // Only re-render changed parts
-    if(projectsChanged||issuesChanged||membersChanged){
-      renderSidebar();
-      const activePage=document.querySelector('.page.active')?.id?.replace('page-','');
-      if(activePage==='board')    renderBoard();
-      if(activePage==='backlog')  renderBacklog();
-      if(activePage==='sprint')   renderSprint();
-      if(activePage==='projects') renderProjects();
-    }
+    renderAll();
   } catch(e){
     console.error('loadData error:',e);
-    if(!silent) showToast('Gagal load data: '+e.message);
+    showToast('Gagal load data: '+e.message);
   }
 }
 function renderAll(){renderProjects();renderBoard();renderBacklog();renderSprint();renderSidebar();}

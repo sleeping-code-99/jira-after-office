@@ -72,20 +72,19 @@ async function createProject(){
 }
 
 // ── NAV & UTILS ──
-function showPage(name,el){
+async function showPage(name,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+name)?.classList.add('active');
   if(el) el.classList.add('active');
   const crumbMap={projects:'Semua Project',board:'Board',backlog:'Backlog',sprint:'Task Overview'};
   document.getElementById('topbar-crumb').innerHTML=crumbMap[name]||name;
-  // Render immediately with current data (no flicker)
-  if(name==='board')    renderBoard();
-  if(name==='backlog')  renderBacklog();
-  if(name==='sprint')   renderSprint();
+  // Refetch fresh data from Supabase every page switch
+  await loadData();
+  if(name==='board') renderBoard();
+  if(name==='backlog') renderBacklog();
+  if(name==='sprint') renderSprint();
   if(name==='projects'){ renderProjects(); renderSidebar(); }
-  // Then silently fetch latest data in background
-  loadData(true);
 }
 function showPageDirect(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));

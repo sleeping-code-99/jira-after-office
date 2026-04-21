@@ -251,4 +251,3 @@ function addComment(){
   document.getElementById('cmt-input').value='';
   renderComments(currentIssueId);
 }
-

@@ -1,20 +1,19 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+<title>Login — ProjectFlow</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login — ProjectFlow by AfterOffice Academy</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <div id="auth-screen">
   <div class="auth-wrap">
     <div class="auth-brand">
       <div class="auth-brand-name">Project<span>Flow</span>
-        <div style="font-size:11px;font-weight:400;color:var(--text-s);letter-spacing:0;margin-top:1px">by AfterOffice Academy</div>
+        <div style="font-size:11px;font-weight:400;color:var(--text-s);margin-top:1px">by AfterOffice Academy</div>
       </div>
     </div>
     <div class="auth-h">Masuk ke workspace</div>
@@ -27,30 +26,17 @@
     </div>
   </div>
 </div>
-
 <script>
-// config.js — Supabase init & constants
 const SUPABASE_URL = 'https://mzxptzoapezfaaepkzul.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im16eHB0em9hcGV6ZmFhZXBrenVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTQ4MzMsImV4cCI6MjA5MjI5MDgzM30.uMNzyKquhvY4GQqW-8pDHpNWOm5J8SFQntwFKLJlEhI';
 const ADMIN_EMAIL = 'kornelius@afteroffice.com';
 const PROJECT_COLORS = ['#0052CC','#36B37E','#FF5630','#FF991F','#6554C0','#00B8D9','#172B4D','#57D9A3'];
-
 let sb = null;
 try {
   sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      storageKey: 'projectflow-auth',
-      storage: window.localStorage
-    }
+    auth: { persistSession: true, autoRefreshToken: true, storageKey: 'pf-auth', storage: window.localStorage }
   });
-} catch(e){ console.error('Supabase init error:', e); }
-
-</script>
-
-<script>
-// Greeting
+} catch(e) { console.error('Supabase init:', e); }
 (function(){
   var h = new Date().getHours();
   var salam = h < 11 ? 'Selamat Pagi' : h < 15 ? 'Selamat Siang' : h < 18 ? 'Selamat Sore' : 'Selamat Malam';
@@ -58,18 +44,16 @@ try {
   if(el) el.textContent = salam + ', Afterians!';
 })();
 
-// Cek session — kalau sudah login redirect ke app
-(async function(){
+(async function checkExistingSession(){
+  if(!sb) return;
   try {
     const { data: { session } } = await sb.auth.getSession();
     if(session && session.user) {
       window.location.replace('index.html');
-      return;
     }
-  } catch(e) { console.error('Session check:', e); }
+  } catch(e) { console.error(e); }
 })();
 
-// Login handler
 async function doLogin() {
   const email = document.getElementById('li-email').value.trim();
   const pass  = document.getElementById('li-pass').value;
@@ -79,17 +63,17 @@ async function doLogin() {
   if(!email) { err.textContent = 'Email tidak boleh kosong.'; err.style.display = 'block'; return; }
   if(!pass)  { err.textContent = 'Password tidak boleh kosong.'; err.style.display = 'block'; return; }
   btn.disabled = true; btn.textContent = 'Masuk...';
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-  btn.disabled = false; btn.textContent = 'Masuk';
-  if(error) { err.textContent = error.message; err.style.display = 'block'; return; }
-  window.location.replace('index.html');
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if(error) { btn.disabled = false; btn.textContent = 'Masuk'; err.textContent = error.message; err.style.display = 'block'; return; }
+    window.location.replace('index.html');
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Masuk';
+    err.textContent = 'Terjadi kesalahan, coba lagi.'; err.style.display = 'block';
+  }
 }
-
 document.getElementById('li-btn').addEventListener('click', doLogin);
-document.getElementById('li-pass').addEventListener('keydown', e => {
-  if(e.key === 'Enter') doLogin();
-});
+document.getElementById('li-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 </script>
-
 </body>
 </html>
