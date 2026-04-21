@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProjectFlow by AfterOffice Academy</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- APP -->
+<div id="app">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-top">
+      <div class="sb-logo-name">Project<span style="opacity:.7;font-weight:400">Flow</span><div style="font-size:10px;font-weight:400;color:var(--sidebar-t);letter-spacing:0;margin-top:1px">by AfterOffice Academy</div></div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-label">Menu</div>
+      <div class="sb-item active" onclick="showPage('projects',this)" id="nav-projects">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Semua Project
+      </div>
+      <div class="sb-item" onclick="showPage('board',this)" id="nav-board">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="10"/><rect x="14" y="17" width="7" height="4"/></svg>
+        Board
+        <span class="badge-count" id="sb-board-count">0</span>
+      </div>
+      <div class="sb-item" onclick="showPage('backlog',this)" id="nav-backlog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1"/><circle cx="3" cy="12" r="1"/><circle cx="3" cy="18" r="1"/></svg>
+        Backlog
+      </div>
+      <div class="sb-item" onclick="showPage('sprint',this)" id="nav-sprint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        Task Overview
+      </div>
+    </div>
+    <div class="sb-section" style="border-top:1px solid rgba(255,255,255,.08);flex:1">
+      <div class="sb-section-label">Projects</div>
+      <div class="sb-projects" id="sb-projects-list"></div>
+    </div>
+    <div class="sb-bottom">
+      <div class="sb-user">
+        <div class="sb-avatar" id="sb-av" style="background:var(--blue)">U</div>
+        <div class="sb-user-info">
+          <div class="sb-user-email" id="sb-email">user@email.com</div>
+          <div class="sb-user-role">Member</div>
+        </div>
+        <button class="sb-logout" onclick="doLogout()" title="Keluar">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-crumb" id="topbar-crumb">ProjectFlow</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn-sm btn-ghost" onclick="openCreateIssue()">+ Issue</button>
+        <button class="btn-sm btn-blue" id="topbar-create-btn" onclick="openCreateIssue()">+ Create</button>
+      </div>
+    </div>
+
+    <!-- PROJECTS PAGE -->
+    <div class="page active" id="page-projects">
+      <div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:20px;font-weight:700;margin-bottom:4px">Semua Project</div>
+          <div style="font-size:13px;color:var(--text-s)">Pilih project untuk mulai kerja</div>
+        </div>
+        <button class="btn-sm btn-blue" onclick="openNewProject()">+ Project Baru</button>
+      </div>
+      <div class="projects-grid" id="projects-grid"></div>
+    </div>
+
+    <!-- BOARD PAGE -->
+    <div class="page" id="page-board">
+      <div class="board-toolbar">
+        <input class="board-search" type="text" id="board-search" placeholder="🔍 Cari issue..." oninput="renderBoard()">
+        <select class="filter-sel" id="f-type" onchange="renderBoard()">
+          <option value="">Semua Tipe</option>
+          <option value="story">Story</option>
+          <option value="bug">Bug</option>
+          <option value="task">Task</option>
+          <option value="epic">Epic</option>
+        </select>
+        <select class="filter-sel" id="f-prio" onchange="renderBoard()">
+          <option value="">Semua Prioritas</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <select class="filter-sel" id="f-assignee" onchange="renderBoard()">
+          <option value="">Semua Assignee</option>
+        </select>
+      </div>
+      <div class="board-columns">
+        <div class="board-col" id="col-todo" ondragover="dragOver(event,'todo')" ondragleave="dragLeave(event)" ondrop="drop(event,'todo')">
+          <div class="col-hd"><div class="col-title"><span class="col-dot col-dot-todo"></span>To Do</div><span class="col-count" id="cnt-todo">0</span></div>
+          <div id="cards-todo"></div>
+          <button class="add-card-btn" onclick="openCreateIssue('todo')">+ Tambah</button>
+        </div>
+        <div class="board-col" id="col-inprogress" ondragover="dragOver(event,'inprogress')" ondragleave="dragLeave(event)" ondrop="drop(event,'inprogress')">
+          <div class="col-hd"><div class="col-title"><span class="col-dot col-dot-inprogress"></span>In Progress</div><span class="col-count" id="cnt-inprogress">0</span></div>
+          <div id="cards-inprogress"></div>
+          <button class="add-card-btn" onclick="openCreateIssue('inprogress')">+ Tambah</button>
+        </div>
+        <div class="board-col" id="col-review" ondragover="dragOver(event,'review')" ondragleave="dragLeave(event)" ondrop="drop(event,'review')">
+          <div class="col-hd"><div class="col-title"><span class="col-dot col-dot-review"></span>In Review</div><span class="col-count" id="cnt-review">0</span></div>
+          <div id="cards-review"></div>
+          <button class="add-card-btn" onclick="openCreateIssue('review')">+ Tambah</button>
+        </div>
+        <div class="board-col" id="col-done" ondragover="dragOver(event,'done')" ondragleave="dragLeave(event)" ondrop="drop(event,'done')">
+          <div class="col-hd"><div class="col-title"><span class="col-dot col-dot-done"></span>Done</div><span class="col-count" id="cnt-done">0</span></div>
+          <div id="cards-done"></div>
+          <button class="add-card-btn" onclick="openCreateIssue('done')">+ Tambah</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BACKLOG PAGE -->
+    <div class="page" id="page-backlog">
+      <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:16px;font-weight:700">Backlog</div>
+        <button class="btn-sm btn-blue" onclick="openCreateIssue()">+ Issue</button>
+      </div>
+      <div class="bl-table">
+        <div class="bl-row bl-hd">
+          <div>Key</div><div>Judul</div><div>Tipe</div><div>Prioritas</div><div>Delivery Links</div><div>Status</div>
+        </div>
+        <div id="backlog-body"></div>
+      </div>
+    </div>
+
+    <!-- SPRINT PAGE -->
+    <div class="page" id="page-sprint">
+      <div style="font-size:16px;font-weight:700;margin-bottom:16px">Task Overview</div>
+      <div class="sprint-grid" id="sprint-stats"></div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:20px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:14px">Progress per Status</div>
+        <div id="sprint-prog"></div>
+      </div>
+    </div>
+
+    <!-- DETAIL PAGE -->
+    <div class="page" id="page-detail">
+      <button class="back-btn" onclick="goBack()">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        Kembali
+      </button>
+      <div class="detail-wrap">
+        <div class="detail-main">
+          <div id="d-type-badge" style="margin-bottom:8px"></div>
+          <div class="detail-key" id="d-key"></div>
+          <div class="detail-title" id="d-title"></div>
+          <div class="detail-desc" id="d-desc"></div>
+
+          <!-- DELIVERY LINKS -->
+          <div class="links-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              Delivery Links
+            </div>
+            <div id="links-list"></div>
+            <div class="add-link-row">
+              <input type="text" id="new-link-label" placeholder="Label (misal: Figma, PRD, Staging...)" style="flex:0.6">
+              <input type="url" id="new-link-url" placeholder="https://..." style="flex:1">
+              <button class="btn-sm btn-blue" onclick="addDeliveryLink()">Tambah</button>
+            </div>
+          </div>
+
+          <!-- COMMENTS -->
+          <div class="comments-section">
+            <div class="section-title">
+              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Komentar
+            </div>
+            <div id="comments-list"></div>
+            <div class="comment-input-wrap">
+              <div class="comment-av" id="d-user-av">U</div>
+              <div style="flex:1">
+                <textarea class="comment-textarea" id="cmt-input" rows="2" placeholder="Tulis komentar..."></textarea>
+                <div style="margin-top:6px;display:flex;gap:6px">
+                  <button class="btn-sm btn-blue" onclick="addComment()">Kirim</button>
+                  <button class="btn-sm btn-ghost" onclick="document.getElementById('cmt-input').value=''">Batal</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-aside">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:16px">
+            <div class="detail-field">
+              <div class="detail-field-label">Status</div>
+              <select class="detail-select" id="d-status" onchange="updateIssueStatus()">
+                <option value="todo">To Do</option>
+                <option value="inprogress">In Progress</option>
+                <option value="review">In Review</option>
+                <option value="done">Done</option>
+              </select>
+            </div>
+            <div class="detail-field">
+              <div class="detail-field-label">Prioritas</div>
+              <div id="d-prio" style="font-size:13px;font-weight:600"></div>
+            </div>
+            <div class="detail-field">
+              <div class="detail-field-label">Assignee</div>
+              <select class="detail-select" id="d-assignee" onchange="updateIssueAssignee()">
+                <option value="">— Unassigned —</option>
+              </select>
+            </div>
+            <div class="detail-field">
+              <div class="detail-field-label">Project</div>
+              <div id="d-project" style="font-size:13px"></div>
+            </div>
+            <div class="detail-field">
+              <div class="detail-field-label">Dibuat</div>
+              <div id="d-created" style="font-size:13px;color:var(--text-s)"></div>
+            </div>
+            <button class="btn-sm btn-danger" style="width:100%;justify-content:center;margin-top:8px" onclick="deleteIssue()">Hapus Issue</button>
+          </div>
+        </div>
+      </div>
+    </div></div>
+</div>
+
+<!-- CREATE ISSUE MODAL -->
+<div class="modal-overlay" id="modal-issue">
+  <div class="modal">
+    <div class="modal-hd">
+      <div class="modal-title">Buat Issue Baru</div>
+      <button class="modal-close" onclick="closeModal('modal-issue')">×</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="modal-label">Project *</div>
+        <select class="modal-select" id="ni-project"></select>
+      </div>
+      <div>
+        <div class="modal-label">Judul *</div>
+        <input class="modal-input" id="ni-title" type="text" placeholder="Apa yang perlu diselesaikan?">
+      </div>
+      <div>
+        <div class="modal-label">Deskripsi</div>
+        <textarea class="modal-input" id="ni-desc" rows="3" placeholder="Detail lebih lanjut..." style="resize:vertical"></textarea>
+      </div>
+      <div class="modal-grid3">
+        <div>
+          <div class="modal-label">Tipe</div>
+          <select class="modal-select" id="ni-type">
+            <option value="task">Task</option>
+            <option value="story">Story</option>
+            <option value="bug">Bug</option>
+            <option value="epic">Epic</option>
+          </select>
+        </div>
+        <div>
+          <div class="modal-label">Prioritas</div>
+          <select class="modal-select" id="ni-prio">
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div>
+          <div class="modal-label">Status</div>
+          <select class="modal-select" id="ni-status">
+            <option value="todo">To Do</option>
+            <option value="inprogress">In Progress</option>
+            <option value="review">In Review</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-grid2">
+        <div>
+          <div class="modal-label">Assignee</div>
+          <select class="modal-select" id="ni-assignee">
+            <option value="">— Pilih member —</option>
+          </select>
+        </div>
+        <div>
+          <div class="modal-label">Delivery Link (Opsional)</div>
+          <input class="modal-input" id="ni-link" type="url" placeholder="https://...">
+        </div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-sm btn-ghost" onclick="closeModal('modal-issue')">Batal</button>
+      <button class="btn-sm btn-blue" onclick="createIssue()">Buat Issue</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- NEW PROJECT MODAL -->
+<div class="modal-overlay" id="modal-project">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-hd">
+      <div class="modal-title">Project Baru</div>
+      <button class="modal-close" onclick="closeModal('modal-project')">×</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <div class="modal-label">Nama Project *</div>
+        <input class="modal-input" id="np-name" type="text" placeholder="Nama project kamu">
+      </div>
+      <div class="modal-grid2">
+        <div>
+          <div class="modal-label">Key (2-4 huruf)</div>
+          <input class="modal-input" id="np-key" type="text" placeholder="PF" maxlength="4" style="text-transform:uppercase;font-family:'DM Mono',monospace">
+        </div>
+        <div>
+          <div class="modal-label">Warna</div>
+          <div class="color-swatches" id="color-swatches"></div>
+        </div>
+      </div>
+      <div>
+        <div class="modal-label">Deskripsi</div>
+        <input class="modal-input" id="np-desc" type="text" placeholder="Singkat tentang project ini">
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-sm btn-ghost" onclick="closeModal('modal-project')">Batal</button>
+      <button class="btn-sm btn-blue" onclick="createProject()">Buat Project</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+<script src="js/render.js"></script>
+<script src="js/actions.js"></script>
+<script>
+// Cek session saat halaman load
+window.addEventListener('DOMContentLoaded', async function(){
+  try {
+    const { data: { session }, error } = await sb.auth.getSession();
+    if(!session){
+      // Tidak ada session → redirect ke login
+      window.location.href = 'login.html';
+      return;
+    }
+    currentUser = session.user;
+    const email = session.user.email;
+    const ini = email.charAt(0).toUpperCase();
+    document.getElementById('sb-av').textContent = ini;
+    document.getElementById('sb-email').textContent = email;
+    document.getElementById('d-user-av').textContent = ini;
+    if(email === ADMIN_EMAIL){
+      const navAdmin = document.getElementById('nav-admin');
+      if(navAdmin) navAdmin.style.display = 'flex';
+    }
+    await loadData();
+    await syncMember(email);
+    startRealtime();
+    // Background silent refresh every 15s as fallback
+    setInterval(() => loadData(true), 15000);
+    renderAll();
+    showPage('projects', document.getElementById('nav-projects'));
+  } catch(e){
+    console.error('App init error:', e);
+    window.location.href = 'login.html';
+  }
+});
+
+async function doLogout(){
+  stopRealtime();
+  if(sb) await sb.auth.signOut();
+  window.location.href = 'login.html';
+}
+</script>
+</body>
+</html>
