@@ -10,7 +10,6 @@
 </head>
 <body>
 
-<!-- APP -->
 <div id="app">
   <!-- SIDEBAR -->
   <div class="sidebar">
@@ -360,13 +359,12 @@ try {
 <script src="render.js"></script>
 <script src="actions.js"></script>
 <script>
-// Cek session saat halaman load
-window.addEventListener('DOMContentLoaded', async function(){
-  // Show loading indicator
+// Init app - cek session, kalau tidak ada redirect ke login
+window.addEventListener('DOMContentLoaded', async function() {
   document.body.style.opacity = '0';
   try {
-    const { data: { session }, error } = await sb.auth.getSession();
-    if(!session || !session.user){
+    const { data: { session } } = await sb.auth.getSession();
+    if(!session || !session.user) {
       window.location.replace('login.html');
       return;
     }
@@ -376,30 +374,30 @@ window.addEventListener('DOMContentLoaded', async function(){
     document.getElementById('sb-av').textContent = ini;
     document.getElementById('sb-email').textContent = email;
     document.getElementById('d-user-av').textContent = ini;
-    if(email === ADMIN_EMAIL){
-      const navAdmin = document.getElementById('nav-admin');
-      if(navAdmin) navAdmin.style.display = 'flex';
+    if(email === ADMIN_EMAIL) {
+      const nav = document.getElementById('nav-admin');
+      if(nav) nav.style.display = 'flex';
     }
     await loadData();
     await syncMember(email);
     startRealtime();
     setInterval(() => loadData(true), 15000);
     renderAll();
-    document.body.style.opacity = '1';
     document.body.style.transition = 'opacity 0.2s ease';
+    document.body.style.opacity = '1';
     showPage('projects', document.getElementById('nav-projects'));
-  } catch(e){
+  } catch(e) {
     console.error('App init error:', e);
     window.location.replace('login.html');
   }
 });
 
-async function doLogout(){
+async function doLogout() {
   stopRealtime();
   if(sb) await sb.auth.signOut();
-  window.location.href = 'login.html';
+  window.location.replace('login.html');
 }
 </script>
-<script src="greeting.js"></script>
+
 </body>
 </html>
